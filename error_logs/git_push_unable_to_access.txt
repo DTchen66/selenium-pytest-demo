@@ -1,0 +1,13 @@
+(pytest-env) PS D:\pytest> git remote add origin https://github.com/DTchen66/selenium-pytest-demo.git
+(pytest-env) PS D:\pytest> git branch -M main
+(pytest-env) PS D:\pytest> git push -u origin main
+fatal: User canceled device code authentication
+error: cannot spawn d:\Users\Alan\AppData\Local\Programs\Microsoft VS Code\resources\app\extensions\git\dist\askpass.sh: No such file or directory
+Username for 'https://github.com': 
+(pytest-env) PS D:\pytest> ssh -T git@github.com
+Hi DTchen66! You've successfully authenticated, but GitHub does not provide shell access.
+(pytest-env) PS D:\pytest> git push -u origin main
+fatal: unable to access 'https://github.com/DTchen66/selenium-pytest-demo.git/': Failed to connect to github.com port 443 after 21055 ms: Couldn't connect to server
+(pytest-env) PS D:\pytest> git remote -v
+origin  https://github.com/DTchen66/selenium-pytest-demo.git (fetch)
+origin  https://github.com/DTchen66/selenium-pytest-demo.git (push)
