@@ -1,0 +1,152 @@
+(pytest-env) PS D:\pytest> pytest test_baidu.py -v
+================================================================================================== test session starts ==================================================================================================
+platform win32 -- Python 3.11.0rc2, pytest-9.1.1, pluggy-1.7.0 -- D:\pytest\pytest-env\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\pytest
+collected 1 item                                                                                                                                                                                                         
+
+test_baidu.py::test_baidu_search FAILED                                                                                                                                                                            [100%]
+
+======================================================================================================= FAILURES ======================================================================================================== 
+___________________________________________________________________________________________________ test_baidu_search ___________________________________________________________________________________________________ 
+
+    def test_baidu_search():
+        options = Options()
+        options.add_argument('--headless')  # 无头模式，不弹浏览器窗口
+
+        driver = webdriver.Chrome(options=options)
+        driver.get("https://www.baidu.com")
+
+        # 找到搜索框，输入关键词
+        search_box = driver.find_element(By.ID, "kw")
+>       search_box.send_keys("pytest selenium")
+
+test_baidu.py:15:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pytest-env\Lib\site-packages\selenium\webdriver\remote\webelement.py:272: in send_keys
+    self._execute(
+pytest-env\Lib\site-packages\selenium\webdriver\remote\webelement.py:504: in _execute
+    return self._parent.execute(command, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pytest-env\Lib\site-packages\selenium\webdriver\remote\webdriver.py:506: in execute
+    self.error_handler.check_response(response)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <selenium.webdriver.remote.errorhandler.ErrorHandler object at 0x00000164C1AB5950>
+response = {'status': 400, 'value': '{"value":{"error":"element not interactable","message":"element not interactable\\n  (Sessio...2d80bf84]\\n\\t(No symbol) [0x7ff62d7f7f7c]\\n\\t(No symbol) [0x7fffed53dda7]\\n\\t(No symbol) [0x7fffee0bee4c]\\n"}}'}
+
+    def check_response(self, response: dict[str, Any]) -> None:
+        """Check that a JSON response from the WebDriver does not have an error.
+
+        Args:
+            response: The JSON response from the WebDriver server as a dictionary
+                object.
+
+        Raises:
+            WebDriverException: If the response contains an error message.
+        """
+        status = response.get("status", None)
+        if not status or status == ErrorCode.SUCCESS:
+            return
+        value = None
+        message = response.get("message", "")
+        screen: str = response.get("screen", "")
+        stacktrace = None
+        if isinstance(status, int):
+            value_json = response.get("value", None)
+            if value_json and isinstance(value_json, str):
+                try:
+                    value = json.loads(value_json)
+                    if isinstance(value, dict):
+                        if len(value) == 1:
+                            value = value["value"]
+                        status = value.get("error", None)
+                        if not status:
+                            status = value.get("status", ErrorCode.UNKNOWN_ERROR)
+                            message = value.get("value") or value.get("message")
+                            if not isinstance(message, str):
+                                value = message
+                                message = message.get("message") if isinstance(message, dict) else None
+                        else:
+                            message = value.get("message", None)
+                except ValueError:
+                    pass
+
+        exception_class: type[WebDriverException]
+        e = ErrorCode()
+        error_codes = [item for item in dir(e) if not item.startswith("__")]
+        for error_code in error_codes:
+            error_info = getattr(ErrorCode, error_code)
+            if isinstance(error_info, list) and status in error_info:
+                exception_class = getattr(ExceptionMapping, error_code, WebDriverException)
+                break
+        else:
+            exception_class = WebDriverException
+
+        if not value:
+            value = response["value"]
+        if isinstance(value, str):
+            raise exception_class(value)
+        if message == "" and "message" in value:
+            message = value["message"]
+
+        screen = None  # type: ignore[assignment]
+        if "screen" in value:
+            screen = value["screen"]
+
+        stacktrace = None
+        st_value = value.get("stackTrace") or value.get("stacktrace")
+        if st_value:
+            if isinstance(st_value, str):
+                stacktrace = st_value.split("\n")
+            else:
+                stacktrace = []
+                try:
+                    for frame in st_value:
+                        line = frame.get("lineNumber", "")
+                        file = frame.get("fileName", "<anonymous>")
+                        if line:
+                            file = f"{file}:{line}"
+                        meth = frame.get("methodName", "<anonymous>")
+                        if "className" in frame:
+                            meth = f"{frame['className']}.{meth}"
+                        msg = "    at %s (%s)"
+                        msg = msg % (meth, file)
+                        stacktrace.append(msg)
+                except TypeError:
+                    pass
+        if exception_class == UnexpectedAlertPresentException:
+            alert_text = None
+            if "data" in value:
+                alert_text = value["data"].get("text")
+            elif "alert" in value:
+                alert_text = value["alert"].get("text")
+            raise exception_class(message, screen, stacktrace, alert_text)
+>       raise exception_class(message, screen, stacktrace)
+E       selenium.common.exceptions.ElementNotInteractableException: Message: element not interactable
+E         (Session info: chrome=155.0.8059.86); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementnotinteractableexception
+E       Stacktrace:
+E       Symbols not available. Dumping unresolved backtrace:
+E               (No symbol) [0x7ff62dc4e745]
+E               (No symbol) [0x7ff62d803d00]
+E               (No symbol) [0x7ff62d68798a]
+E               (No symbol) [0x7ff62d6b8ada]
+E               (No symbol) [0x7ff62d682af6]
+E               (No symbol) [0x7ff62d6e4b5a]
+E               (No symbol) [0x7ff62d681462]
+E               (No symbol) [0x7ff62d682273]
+E               (No symbol) [0x7ff62dcf17b1]
+E               (No symbol) [0x7ff62dd287c7]
+E               (No symbol) [0x7ff62dd1c85e]
+E               (No symbol) [0x7ff62d9c884e]
+E               (No symbol) [0x7ff62d810415]
+E               (No symbol) [0x7ff62d80bdf4]
+E               (No symbol) [0x7ff62d80bf84]
+E               (No symbol) [0x7ff62d7f7f7c]
+E               (No symbol) [0x7fffed53dda7]
+E               (No symbol) [0x7fffee0bee4c]
+
+pytest-env\Lib\site-packages\selenium\webdriver\remote\errorhandler.py:232: ElementNotInteractableException
+================================================================================================ short test summary info ================================================================================================ 
+FAILED test_baidu.py::test_baidu_search - selenium.common.exceptions.ElementNotInteractableException: Message: element not interactable
+============================================================================================= 1 failed in 164.81s (0:02:44) ============================================================================================= 
