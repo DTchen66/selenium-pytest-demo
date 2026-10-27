@@ -37,5 +37,10 @@ git remote set-url <remote_name> <new_url>：修改指定远程仓库的 URL。
 git remote：列出当前仓库中已配置的远程仓库。
 git remote -v：列出当前仓库中已配置的远程仓库，并显示它们的 URL。
 
+✅ 日常开发：git push（简洁，分支已关联的情况下）
+✅ 第一次推新分支：git push -u origin 分支名
+✅ 脚本/CI 里：git push origin main（明确，不依赖本地配置）
+✅ 不确定当前状态时：git push origin main（不会推错分支）
+
 ## 下一步
 把git远程地址改成 SSH,重新提交。
