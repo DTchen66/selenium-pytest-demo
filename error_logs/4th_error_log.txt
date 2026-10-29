@@ -1,0 +1,92 @@
+(pytest-env) PS D:\pytest> pytest .\test_baidu.py -v
+============================================================================= test session starts =============================================================================
+platform win32 -- Python 3.11.0rc2, pytest-9.1.1, pluggy-1.7.0 -- D:\pytest\pytest-env\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\pytest
+collected 1 item                                                                                                                                                               
+
+test_baidu.py::test_baidu_search FAILED                                                                                                                                  [100%]
+
+================================================================================== FAILURES =================================================================================== 
+______________________________________________________________________________ test_baidu_search ______________________________________________________________________________ 
+
+    def test_baidu_search():
+        options = Options()
+        options.add_argument('--headless')  # 无头模式，不弹浏览器窗口
+
+        driver = webdriver.Chrome(options=options)
+        driver.get("https://www.baidu.com")
+        time.sleep(5)  # 给足时间让页面完全加载
+
+        # 显示等待：等搜索框出现且可交互，最多等10s
+        wait = WebDriverWait(driver, 10)
+        search_box = wait.until(
+            EC.element_to_be_clickable((By.ID, "chat-textarea"))
+        )
+
+        # 找到搜索框，输入关键词
+        search_box.send_keys("pytest selenium")
+        # textarea支持submit()方法，直接提交表单
+        search_box.send_keys(webdriver.common.keys.Keys.RETURN)
+
+        # 等待结果页加载
+>       wait.until(EC.title_contains("pytest selenium"))
+
+test_baidu.py:29:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <selenium.webdriver.support.wait.WebDriverWait (session="aa578fd0b88f65a1c6bcdf0fe21f70f0")>
+method = <function title_contains.<locals>._predicate at 0x00000177CCBD3240>, message = ''
+
+    def until(self, method: Callable[[D], Literal[False] | T], message: str = "") -> T:
+        """Wait until the method returns a value that is not False.
+
+        Calls the method provided with the driver as an argument until the
+        return value does not evaluate to ``False``.
+    
+        Args:
+            method: A callable object that takes a WebDriver instance as an
+                argument.
+            message: Optional message for TimeoutException.
+
+        Returns:
+            The result of the last call to `method`.
+
+        Raises:
+            TimeoutException: If 'method' does not return a truthy value within
+                the WebDriverWait object's timeout.
+
+        Example:
+            >>> from selenium.webdriver.common.by import By
+            >>> from selenium.webdriver.support.wait import WebDriverWait
+            >>> from selenium.webdriver.support import expected_conditions as EC
+            >>>
+            >>> # Wait until an element is visible on the page
+            >>> wait = WebDriverWait(driver, 10)
+            >>> element = wait.until(EC.visibility_of_element_located((By.ID, "exampleId")))
+            >>> print(element.text)
+        """
+        screen = None
+        stacktrace = None
+
+        end_time = time.monotonic() + self._timeout
+        while True:
+            try:
+                value = method(self._driver)
+                if value:
+                    return value
+            except self._ignored_exceptions as exc:
+                screen = getattr(exc, "screen", None)
+                stacktrace = getattr(exc, "stacktrace", None)
+            if time.monotonic() > end_time:
+                break
+            time.sleep(self._poll)
+>       raise TimeoutException(message, screen, stacktrace)
+E       selenium.common.exceptions.TimeoutException: Message:
+
+pytest-env\Lib\site-packages\selenium\webdriver\support\wait.py:121: TimeoutException
+------------------------------------------------------------------------------ Captured log call ------------------------------------------------------------------------------ 
+WARNING  selenium.webdriver.common.selenium_manager:selenium_manager.py:168 Error sending stats to Plausible: error sending request for url (https://plausible.io/api/event)    
+=========================================================================== short test summary info =========================================================================== 
+FAILED test_baidu.py::test_baidu_search - selenium.common.exceptions.TimeoutException: Message:
+======================================================================== 1 failed in 134.40s (0:02:14) ========================================================================

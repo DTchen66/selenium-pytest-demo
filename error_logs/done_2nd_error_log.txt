@@ -1,0 +1,81 @@
+(pytest-env) PS D:\pytest> pytest .\test_baidu.py -v
+============================================================================= test session starts =============================================================================
+platform win32 -- Python 3.11.0rc2, pytest-9.1.1, pluggy-1.7.0 -- D:\pytest\pytest-env\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\pytest
+collected 1 item                                                                                                                                                               
+
+test_baidu.py::test_baidu_search FAILED                                                                                                                                  [100%]
+
+================================================================================== FAILURES =================================================================================== 
+______________________________________________________________________________ test_baidu_search ______________________________________________________________________________ 
+
+    def test_baidu_search():
+        options = Options()
+        options.add_argument('--headless')  # 无头模式，不弹浏览器窗口
+
+        driver = webdriver.Chrome(options=options)
+        driver.get("https://www.baidu.com")
+
+        # 显示等待：等搜索框出现且可交互，最多等10s
+        wait = WebDriverWait(driver, 10)
+>       search_box = wait.until(
+            EC.element_to_be_clickable((By.ID, "kw"))
+        )
+
+test_baidu.py:17:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <selenium.webdriver.support.wait.WebDriverWait (session="2eb2b3d4306b040c9a8b15bb4b7ba4c7")>
+method = <function element_to_be_clickable.<locals>._predicate at 0x0000022BC0063100>, message = ''
+
+    def until(self, method: Callable[[D], Literal[False] | T], message: str = "") -> T:
+        """Wait until the method returns a value that is not False.
+
+        Calls the method provided with the driver as an argument until the
+        return value does not evaluate to ``False``.
+
+        Args:
+            method: A callable object that takes a WebDriver instance as an
+                argument.
+            message: Optional message for TimeoutException.
+
+        Returns:
+            The result of the last call to `method`.
+
+        Raises:
+            TimeoutException: If 'method' does not return a truthy value within
+                the WebDriverWait object's timeout.
+
+        Example:
+            >>> from selenium.webdriver.common.by import By
+            >>> from selenium.webdriver.support.wait import WebDriverWait
+            >>> from selenium.webdriver.support import expected_conditions as EC
+            >>>
+            >>> # Wait until an element is visible on the page
+            >>> wait = WebDriverWait(driver, 10)
+            >>> element = wait.until(EC.visibility_of_element_located((By.ID, "exampleId")))
+            >>> print(element.text)
+        """
+        screen = None
+        stacktrace = None
+
+        end_time = time.monotonic() + self._timeout
+        while True:
+            try:
+                value = method(self._driver)
+                if value:
+                    return value
+            except self._ignored_exceptions as exc:
+                screen = getattr(exc, "screen", None)
+                stacktrace = getattr(exc, "stacktrace", None)
+            if time.monotonic() > end_time:
+                break
+            time.sleep(self._poll)
+>       raise TimeoutException(message, screen, stacktrace)
+E       selenium.common.exceptions.TimeoutException: Message:
+
+pytest-env\Lib\site-packages\selenium\webdriver\support\wait.py:121: TimeoutException
+=========================================================================== short test summary info =========================================================================== 
+FAILED test_baidu.py::test_baidu_search - selenium.common.exceptions.TimeoutException: Message:
+============================================================================= 1 failed in 12.66s ==============================================================================

@@ -1,0 +1,218 @@
+(pytest-env) PS D:\pytest> pytest .\test_baidu.py -v        
+============================================================================= test session starts =============================================================================
+platform win32 -- Python 3.11.0rc2, pytest-9.1.1, pluggy-1.7.0 -- D:\pytest\pytest-env\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\pytest
+collected 1 item                                                                                                                                                               
+
+test_baidu.py::test_baidu_search FAILED                                                                                                                                  [100%]
+
+================================================================================== FAILURES =================================================================================== 
+______________________________________________________________________________ test_baidu_search ______________________________________________________________________________ 
+
+self = <selenium.webdriver.remote.webelement.WebElement (session="0d1b58091f4203c96b9bea33cff01ea9", element="f.221F53F28EC03A71231A3E0A4437FAC8.d.1DD123159DD056EB2E8AE14AADB68B5A.e.6")>
+
+    def submit(self) -> None:
+        """Submits a form.
+
+        Example:
+            form = driver.find_element(By.NAME, "login")
+            form.submit()
+        """
+        script = (
+            "/* submitForm */var form = arguments[0];\n"
+            'while (form.nodeName != "FORM" && form.parentNode) {\n'
+            "  form = form.parentNode;\n"
+            "}\n"
+            "if (!form) { throw Error('Unable to find containing form element'); }\n"
+            "if (!form.ownerDocument) { throw Error('Unable to find owning document'); }\n"
+            "var e = form.ownerDocument.createEvent('Event');\n"
+            "e.initEvent('submit', true, true);\n"
+            "if (form.dispatchEvent(e)) { HTMLFormElement.prototype.submit.call(form) }\n"
+        )
+
+        try:
+>           self._parent.execute_script(script, self)
+
+pytest-env\Lib\site-packages\selenium\webdriver\remote\webelement.py:134:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pytest-env\Lib\site-packages\selenium\webdriver\remote\webdriver.py:617: in execute_script
+    return self.execute(command, {"script": script, "args": converted_args})["value"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pytest-env\Lib\site-packages\selenium\webdriver\remote\webdriver.py:506: in execute
+    self.error_handler.check_response(response)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <selenium.webdriver.remote.errorhandler.ErrorHandler object at 0x0000017FB177F110>
+response = {'status': 500, 'value': '{"value":{"error":"javascript error","message":"javascript error: Unable to find owning docu...3b89bb74]\\n\\t(No symbol) [0x7ff73b884bfc]\\n\\t(No symbol) [0x7fffed53dda7]\\n\\t(No symbol) [0x7fffee0bee4c]\\n"}}'}
+
+    def check_response(self, response: dict[str, Any]) -> None:
+        """Check that a JSON response from the WebDriver does not have an error.
+
+        Args:
+            response: The JSON response from the WebDriver server as a dictionary
+                object.
+
+        Raises:
+            WebDriverException: If the response contains an error message.
+        """
+        status = response.get("status", None)
+        if not status or status == ErrorCode.SUCCESS:
+            return
+        value = None
+        message = response.get("message", "")
+        screen: str = response.get("screen", "")
+        stacktrace = None
+        if isinstance(status, int):
+            value_json = response.get("value", None)
+            if value_json and isinstance(value_json, str):
+                try:
+                    value = json.loads(value_json)
+                    if isinstance(value, dict):
+                        if len(value) == 1:
+                            value = value["value"]
+                        status = value.get("error", None)
+                        if not status:
+                            status = value.get("status", ErrorCode.UNKNOWN_ERROR)
+                            message = value.get("value") or value.get("message")
+                            if not isinstance(message, str):
+                                value = message
+                                message = message.get("message") if isinstance(message, dict) else None
+                        else:
+                            message = value.get("message", None)
+                except ValueError:
+                    pass
+
+        exception_class: type[WebDriverException]
+        e = ErrorCode()
+        error_codes = [item for item in dir(e) if not item.startswith("__")]
+        for error_code in error_codes:
+            error_info = getattr(ErrorCode, error_code)
+            if isinstance(error_info, list) and status in error_info:
+                exception_class = getattr(ExceptionMapping, error_code, WebDriverException)
+                break
+        else:
+            exception_class = WebDriverException
+
+        if not value:
+            value = response["value"]
+        if isinstance(value, str):
+            raise exception_class(value)
+        if message == "" and "message" in value:
+            message = value["message"]
+
+        screen = None  # type: ignore[assignment]
+        if "screen" in value:
+            screen = value["screen"]
+
+        stacktrace = None
+        st_value = value.get("stackTrace") or value.get("stacktrace")
+        if st_value:
+            if isinstance(st_value, str):
+                stacktrace = st_value.split("\n")
+            else:
+                stacktrace = []
+                try:
+                    for frame in st_value:
+                        line = frame.get("lineNumber", "")
+                        file = frame.get("fileName", "<anonymous>")
+                        if line:
+                            file = f"{file}:{line}"
+                        meth = frame.get("methodName", "<anonymous>")
+                        if "className" in frame:
+                            meth = f"{frame['className']}.{meth}"
+                        msg = "    at %s (%s)"
+                        msg = msg % (meth, file)
+                        stacktrace.append(msg)
+                except TypeError:
+                    pass
+        if exception_class == UnexpectedAlertPresentException:
+            alert_text = None
+            if "data" in value:
+                alert_text = value["data"].get("text")
+            elif "alert" in value:
+                alert_text = value["alert"].get("text")
+            raise exception_class(message, screen, stacktrace, alert_text)
+>       raise exception_class(message, screen, stacktrace)
+E       selenium.common.exceptions.JavascriptException: Message: javascript error: Unable to find owning document
+E         (Session info: chrome=156.0.8078.49)
+E       Stacktrace:
+E       Symbols not available. Dumping unresolved backtrace:
+E               (No symbol) [0x7ff73b982e35]
+E               (No symbol) [0x7ff73b891dc0]
+E               (No symbol) [0x7ff73b712d03]
+E               (No symbol) [0x7ff73b716260]
+E               (No symbol) [0x7ff73b7181fc]
+E               (No symbol) [0x7ff73b74744f]
+E               (No symbol) [0x7ff73b73dc6a]
+E               (No symbol) [0x7ff73b746271]
+E               (No symbol) [0x7ff73b72bae9]
+E               (No symbol) [0x7ff73b72ce13]
+E               (No symbol) [0x7ff73be163c1]
+E               (No symbol) [0x7ff73be3987b]
+E               (No symbol) [0x7ff73be2e240]
+E               (No symbol) [0x7ff73baab4ee]
+E               (No symbol) [0x7ff73b8a0985]
+E               (No symbol) [0x7ff73b89b9e4]
+E               (No symbol) [0x7ff73b89bb74]
+E               (No symbol) [0x7ff73b884bfc]
+E               (No symbol) [0x7fffed53dda7]
+E               (No symbol) [0x7fffee0bee4c]
+
+pytest-env\Lib\site-packages\selenium\webdriver\remote\errorhandler.py:232: JavascriptException
+
+The above exception was the direct cause of the following exception:
+
+    def test_baidu_search():
+        options = Options()
+        options.add_argument('--headless')  # 无头模式，不弹浏览器窗口
+
+        driver = webdriver.Chrome(options=options)
+        driver.get("https://www.baidu.com")
+        time.sleep(5)  # 给足时间让页面完全加载
+
+        # 显示等待：等搜索框出现且可交互，最多等10s
+        wait = WebDriverWait(driver, 10)
+        search_box = wait.until(
+            EC.element_to_be_clickable((By.ID, "chat-textarea"))
+        )
+
+        # 找到搜索框，输入关键词
+        search_box.send_keys("pytest selenium")
+        # textarea支持submit()方法，直接提交表单
+>       search_box.submit()
+
+test_baidu.py:26:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <selenium.webdriver.remote.webelement.WebElement (session="0d1b58091f4203c96b9bea33cff01ea9", element="f.221F53F28EC03A71231A3E0A4437FAC8.d.1DD123159DD056EB2E8AE14AADB68B5A.e.6")>
+
+    def submit(self) -> None:
+        """Submits a form.
+
+        Example:
+            form = driver.find_element(By.NAME, "login")
+            form.submit()
+        """
+        script = (
+            "/* submitForm */var form = arguments[0];\n"
+            'while (form.nodeName != "FORM" && form.parentNode) {\n'
+            "  form = form.parentNode;\n"
+            "}\n"
+            "if (!form) { throw Error('Unable to find containing form element'); }\n"
+            "if (!form.ownerDocument) { throw Error('Unable to find owning document'); }\n"
+            "var e = form.ownerDocument.createEvent('Event');\n"
+            "e.initEvent('submit', true, true);\n"
+            "if (form.dispatchEvent(e)) { HTMLFormElement.prototype.submit.call(form) }\n"
+        )
+
+        try:
+            self._parent.execute_script(script, self)
+        except JavascriptException as exc:
+>           raise WebDriverException("To submit an element, it must be nested inside a form element") from exc
+E           selenium.common.exceptions.WebDriverException: Message: To submit an element, it must be nested inside a form element
+
+pytest-env\Lib\site-packages\selenium\webdriver\remote\webelement.py:136: WebDriverException
+=========================================================================== short test summary info =========================================================================== 
+FAILED test_baidu.py::test_baidu_search - selenium.common.exceptions.WebDriverException: Message: To submit an element, it must be nested inside a form element
+============================================================================= 1 failed in 10.71s ==============================================================================
