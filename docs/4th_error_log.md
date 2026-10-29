@@ -16,3 +16,9 @@ test_baidu.py::test_baidu_search - selenium.common.exceptions.TimeoutException: 
 
 ## 下一步
 别跟百度较劲，换一个练手站点,直接换成专门给自动化测试用的干净站点。
+
+## 第二阶段：百度风控滑块
+- 现象：搜索提交后弹出拖拽解锁
+- 判断：非元素定位问题，是 Selenium 被百度风控识别
+- 处理：主用例迁到 the-internet.herokuapp.com，百度用例改为 skip+截图留证
+- 收获：学会区分“脚本缺陷”和“外部环境拦截”

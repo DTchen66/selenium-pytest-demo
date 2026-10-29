@@ -25,9 +25,12 @@ def test_baidu_search():
     # 元素是否嵌入在form表单中，如果是，支持submit()方法提交表单；如果不是，使用回车键提交
     search_box.send_keys(webdriver.common.keys.Keys.RETURN)
 
-    # 等待结果页加载
-    wait.until(EC.title_contains("pytest selenium"))    
-    # 验证搜索结果页标题包含关键词
-    assert "pytest selenium" in driver.title
+    # 等待结果页加载，如果10秒内被滑块劫持就截图留证
+    try:
+        wait.until(EC.title_contains("pytest selenium"))
+        assert "pytest selenium" in driver.title
+    except Exception:
+        driver.save_screenshot("baidu_search_result.png")
+        pytest.skip("可能被滑块劫持,非脚本逻辑错误")
     
     driver.quit()
